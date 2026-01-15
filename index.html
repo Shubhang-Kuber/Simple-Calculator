@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator with Firebase Auth</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Auth Section -->
+        <div class="auth-section">
+            <div id="user-info" class="user-info hidden">
+                <img id="user-photo" src="" alt="User Photo" class="user-photo">
+                <span id="user-name"></span>
+                <button id="sign-out-btn" class="auth-btn sign-out-btn">Sign Out</button>
+            </div>
+            <button id="sign-in-btn" class="auth-btn sign-in-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="google-icon">
+                Sign in with Google
+            </button>
+        </div>
+
+        <!-- Calculator Section -->
+        <div class="calculator">
+            <div class="display">
+                <div class="previous-operand" id="previous-operand"></div>
+                <div class="current-operand" id="current-operand">0</div>
+            </div>
+            <div class="buttons">
+                <button class="btn operator" data-action="clear">AC</button>
+                <button class="btn operator" data-action="delete">DEL</button>
+                <button class="btn operator" data-action="percent">%</button>
+                <button class="btn operator" data-action="divide">÷</button>
+                
+                <button class="btn number" data-number="7">7</button>
+                <button class="btn number" data-number="8">8</button>
+                <button class="btn number" data-number="9">9</button>
+                <button class="btn operator" data-action="multiply">×</button>
+                
+                <button class="btn number" data-number="4">4</button>
+                <button class="btn number" data-number="5">5</button>
+                <button class="btn number" data-number="6">6</button>
+                <button class="btn operator" data-action="subtract">−</button>
+                
+                <button class="btn number" data-number="1">1</button>
+                <button class="btn number" data-number="2">2</button>
+                <button class="btn number" data-number="3">3</button>
+                <button class="btn operator" data-action="add">+</button>
+                
+                <button class="btn number zero" data-number="0">0</button>
+                <button class="btn number" data-number=".">.</button>
+                <button class="btn equals" data-action="equals">=</button>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="history-section">
+            <h3>Calculation History</h3>
+            <div id="history-list" class="history-list">
+                <p class="login-prompt">Sign in to see your calculation history</p>
+            </div>
+            <button id="clear-history-btn" class="clear-history-btn hidden">Clear History</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="app.js" defer></script>
+</body>
+</html>
