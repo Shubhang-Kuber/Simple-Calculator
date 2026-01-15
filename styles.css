@@ -78,6 +78,110 @@ body {
     background: #c5221f;
 }
 
+/* Email/Password Form Styles */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.auth-input {
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    outline: none;
+}
+
+.auth-input:focus {
+    border-color: #667eea;
+}
+
+.auth-input::placeholder {
+    color: #999;
+}
+
+/* Password wrapper with eye toggle */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper .auth-input {
+    width: 100%;
+    padding-right: 45px;
+}
+
+.eye-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+}
+
+.eye-btn:hover {
+    color: #667eea;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.login-btn {
+    flex: 1;
+    background: #667eea;
+    color: #fff;
+}
+
+.login-btn:hover {
+    background: #5a6fd6;
+}
+
+.signup-btn {
+    flex: 1;
+    background: #fff;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.signup-btn:hover {
+    background: #667eea;
+    color: #fff;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 5px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.divider span {
+    padding: 0 15px;
+    color: #999;
+    font-size: 12px;
+}
+
 .user-info {
     display: flex;
     align-items: center;

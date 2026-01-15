@@ -15,7 +15,9 @@ import {
     signInWithPopup, 
     signOut, 
     GoogleAuthProvider, 
-    onAuthStateChanged 
+    onAuthStateChanged,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword 
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 import { 
     getFirestore, 
@@ -59,6 +61,11 @@ const currentOperand = document.getElementById('current-operand');
 const historyList = document.getElementById('history-list');
 const clearHistoryBtn = document.getElementById('clear-history-btn');
 
+// Email/Password Auth Elements
+const submitBtn = document.getElementById('submit-btn');
+const signupBtn = document.getElementById('signup-btn');
+const authForm = document.getElementById('auth-form');
+
 // ============================================
 // Calculator State
 // ============================================
@@ -90,6 +97,95 @@ async function signInWithGoogle() {
     }
 }
 
+// Sign up with Email/Password
+async function signUpWithEmail(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    
+    if (!email || !password) {
+        showToast('Please enter email and password');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showToast('Password must be at least 6 characters');
+        return;
+    }
+    
+    try {
+        signupBtn.classList.add('loading');
+        showToast('Creating Account.....');
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        showToast(`Account created! Welcome, ${result.user.email}!`);
+        clearAuthInputs();
+    } catch (error) {
+        console.error('Sign up error:', error);
+        alert(error);
+        handleAuthError(error);
+    } finally {
+        signupBtn.classList.remove('loading');
+    }
+}
+
+// Login with Email/Password
+async function loginWithEmail(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    
+    if (!email || !password) {
+        showToast('Please enter email and password');
+        return;
+    }
+    
+    try {
+        submitBtn.classList.add('loading');
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        showToast(`Welcome back, ${result.user.email}!`);
+        clearAuthInputs();
+    } catch (error) {
+        console.error('Login error:', error);
+        handleAuthError(error);
+    } finally {
+        submitBtn.classList.remove('loading');
+    }
+}
+
+// Handle auth errors with user-friendly messages
+function handleAuthError(error) {
+    switch (error.code) {
+        case 'auth/email-already-in-use':
+            showToast('Email already in use. Try logging in.');
+            break;
+        case 'auth/invalid-email':
+            showToast('Invalid email address.');
+            break;
+        case 'auth/weak-password':
+            showToast('Password is too weak.');
+            break;
+        case 'auth/user-not-found':
+            showToast('No account found. Please sign up.');
+            break;
+        case 'auth/wrong-password':
+            showToast('Incorrect password.');
+            break;
+        case 'auth/invalid-credential':
+            showToast('Invalid email or password.');
+            break;
+        default:
+            showToast('Authentication failed. Please try again.');
+    }
+}
+
+// Clear auth input fields
+function clearAuthInputs() {
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+}
+
 // Sign out
 async function signOutUser() {
     try {
@@ -106,7 +202,7 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         // User is signed in
         currentUser = user;
-        signInBtn.classList.add('hidden');
+        authForm.classList.add('hidden');
         userInfo.classList.remove('hidden');
         userPhoto.src = user.photoURL || 'https://via.placeholder.com/40';
         userName.textContent = user.displayName || user.email;
@@ -117,7 +213,7 @@ onAuthStateChanged(auth, (user) => {
     } else {
         // User is signed out
         currentUser = null;
-        signInBtn.classList.remove('hidden');
+        authForm.classList.remove('hidden');
         userInfo.classList.add('hidden');
         clearHistoryBtn.classList.add('hidden');
         
@@ -377,6 +473,30 @@ function showToast(message) {
 signInBtn.addEventListener('click', signInWithGoogle);
 signOutBtn.addEventListener('click', signOutUser);
 clearHistoryBtn.addEventListener('click', clearHistory);
+
+// Form submit for login (handles Enter key and button click)
+authForm.addEventListener('submit', loginWithEmail);
+
+// Sign up button (separate from form submit)
+signupBtn.addEventListener('click', signUpWithEmail);
+
+// Password visibility toggle
+const togglePasswordBtn = document.getElementById('toggle-password');
+const passwordField = document.getElementById('password');
+const eyeIcon = document.getElementById('eye-icon');
+const eyeOffIcon = document.getElementById('eye-off-icon');
+
+togglePasswordBtn.addEventListener('click', () => {
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        eyeIcon.classList.add('hidden');
+        eyeOffIcon.classList.remove('hidden');
+    } else {
+        passwordField.type = 'password';
+        eyeIcon.classList.remove('hidden');
+        eyeOffIcon.classList.add('hidden');
+    }
+});
 
 // Calculator buttons
 document.querySelectorAll('.btn').forEach(button => {
