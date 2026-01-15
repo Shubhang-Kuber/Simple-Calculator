@@ -1,23 +1,12 @@
 // ============================================
 // Firebase Configuration
 // ============================================
-// Replace the firebaseConfig object below with your own Firebase project configuration.
-// You can find this in your Firebase Console:
-// 1. Go to Firebase Console (https://console.firebase.google.com)
-// 2. Select your project
-// 3. Click the gear icon (Settings) > Project settings
-// 4. Scroll down to "Your apps" and select your web app
-// 5. Copy the firebaseConfig object
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { 
     getAuth, 
-    signInWithPopup, 
     signOut, 
-    GoogleAuthProvider, 
-    onAuthStateChanged,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword 
+    onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 import { 
     getFirestore, 
@@ -46,12 +35,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
 // ============================================
 // DOM Elements
 // ============================================
-const signInBtn = document.getElementById('sign-in-btn');
 const signOutBtn = document.getElementById('sign-out-btn');
 const userInfo = document.getElementById('user-info');
 const userPhoto = document.getElementById('user-photo');
@@ -60,11 +47,8 @@ const previousOperand = document.getElementById('previous-operand');
 const currentOperand = document.getElementById('current-operand');
 const historyList = document.getElementById('history-list');
 const clearHistoryBtn = document.getElementById('clear-history-btn');
-
-// Email/Password Auth Elements
-const submitBtn = document.getElementById('submit-btn');
-const signupBtn = document.getElementById('signup-btn');
-const authForm = document.getElementById('auth-form');
+const loadingScreen = document.getElementById('loading-screen');
+const mainContent = document.getElementById('main-content');
 
 // ============================================
 // Calculator State
@@ -83,146 +67,38 @@ let unsubscribeHistory = null;
 // Authentication Functions
 // ============================================
 
-// Sign in with Google
-async function signInWithGoogle() {
-    try {
-        signInBtn.classList.add('loading');
-        const result = await signInWithPopup(auth, provider);
-        showToast(`Welcome, ${result.user.displayName}!`);
-    } catch (error) {
-        console.error('Sign in error:', error);
-        showToast('Sign in failed. Please try again.');
-    } finally {
-        signInBtn.classList.remove('loading');
-    }
-}
-
-// Sign up with Email/Password
-async function signUpWithEmail(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    
-    if (!email || !password) {
-        showToast('Please enter email and password');
-        return;
-    }
-    
-    if (password.length < 6) {
-        showToast('Password must be at least 6 characters');
-        return;
-    }
-    
-    try {
-        signupBtn.classList.add('loading');
-        showToast('Creating Account.....');
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        showToast(`Account created! Welcome, ${result.user.email}!`);
-        clearAuthInputs();
-    } catch (error) {
-        console.error('Sign up error:', error);
-        alert(error);
-        handleAuthError(error);
-    } finally {
-        signupBtn.classList.remove('loading');
-    }
-}
-
-// Login with Email/Password
-async function loginWithEmail(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    
-    if (!email || !password) {
-        showToast('Please enter email and password');
-        return;
-    }
-    
-    try {
-        submitBtn.classList.add('loading');
-        const result = await signInWithEmailAndPassword(auth, email, password);
-        showToast(`Welcome back, ${result.user.email}!`);
-        clearAuthInputs();
-    } catch (error) {
-        console.error('Login error:', error);
-        handleAuthError(error);
-    } finally {
-        submitBtn.classList.remove('loading');
-    }
-}
-
-// Handle auth errors with user-friendly messages
-function handleAuthError(error) {
-    switch (error.code) {
-        case 'auth/email-already-in-use':
-            showToast('Email already in use. Try logging in.');
-            break;
-        case 'auth/invalid-email':
-            showToast('Invalid email address.');
-            break;
-        case 'auth/weak-password':
-            showToast('Password is too weak.');
-            break;
-        case 'auth/user-not-found':
-            showToast('No account found. Please sign up.');
-            break;
-        case 'auth/wrong-password':
-            showToast('Incorrect password.');
-            break;
-        case 'auth/invalid-credential':
-            showToast('Invalid email or password.');
-            break;
-        default:
-            showToast('Authentication failed. Please try again.');
-    }
-}
-
-// Clear auth input fields
-function clearAuthInputs() {
-    document.getElementById('email').value = '';
-    document.getElementById('password').value = '';
-}
-
-// Sign out
+// Sign out and redirect to login page
 async function signOutUser() {
     try {
         await signOut(auth);
         showToast('Signed out successfully');
+        // Redirect to login page
+        window.location.href = 'login.html';
     } catch (error) {
         console.error('Sign out error:', error);
         showToast('Sign out failed. Please try again.');
     }
 }
 
-// Listen for auth state changes
+// Listen for auth state changes - Protect this page
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // User is signed in
+        // User is signed in - Show the calculator
         currentUser = user;
-        authForm.classList.add('hidden');
-        userInfo.classList.remove('hidden');
+        
+        // Hide loading, show main content
+        loadingScreen.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        
+        // Update user info
         userPhoto.src = user.photoURL || 'https://via.placeholder.com/40';
         userName.textContent = user.displayName || user.email;
-        clearHistoryBtn.classList.remove('hidden');
         
         // Start listening to user's calculation history
         subscribeToHistory(user.uid);
     } else {
-        // User is signed out
-        currentUser = null;
-        authForm.classList.remove('hidden');
-        userInfo.classList.add('hidden');
-        clearHistoryBtn.classList.add('hidden');
-        
-        // Stop listening to history and show login prompt
-        if (unsubscribeHistory) {
-            unsubscribeHistory();
-            unsubscribeHistory = null;
-        }
-        historyList.innerHTML = '<p class="login-prompt">Sign in to see your calculation history</p>';
+        // User is NOT signed in - Redirect to login page
+        window.location.href = 'login.html';
     }
 });
 
@@ -297,21 +173,34 @@ function createHistoryItem(data) {
 
 // Clear all history for current user
 async function clearHistory() {
-    if (!currentUser) return;
+    if (!currentUser) {
+        showToast('Please sign in first');
+        return;
+    }
     
     try {
+        showToast('Clearing history...');
+        
         const q = query(
             collection(db, 'calculations'),
             where('userId', '==', currentUser.uid)
         );
         
         const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            showToast('No history to clear');
+            return;
+        }
+        
+        // Delete all documents
         const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
         await Promise.all(deletePromises);
         
-        showToast('History cleared');
+        showToast('History cleared successfully!');
     } catch (error) {
         console.error('Error clearing history:', error);
+        alert('Error: ' + error.message);
         showToast('Failed to clear history');
     }
 }
@@ -470,33 +359,8 @@ function showToast(message) {
 // ============================================
 
 // Auth buttons
-signInBtn.addEventListener('click', signInWithGoogle);
 signOutBtn.addEventListener('click', signOutUser);
 clearHistoryBtn.addEventListener('click', clearHistory);
-
-// Form submit for login (handles Enter key and button click)
-authForm.addEventListener('submit', loginWithEmail);
-
-// Sign up button (separate from form submit)
-signupBtn.addEventListener('click', signUpWithEmail);
-
-// Password visibility toggle
-const togglePasswordBtn = document.getElementById('toggle-password');
-const passwordField = document.getElementById('password');
-const eyeIcon = document.getElementById('eye-icon');
-const eyeOffIcon = document.getElementById('eye-off-icon');
-
-togglePasswordBtn.addEventListener('click', () => {
-    if (passwordField.type === 'password') {
-        passwordField.type = 'text';
-        eyeIcon.classList.add('hidden');
-        eyeOffIcon.classList.remove('hidden');
-    } else {
-        passwordField.type = 'password';
-        eyeIcon.classList.remove('hidden');
-        eyeOffIcon.classList.add('hidden');
-    }
-});
 
 // Calculator buttons
 document.querySelectorAll('.btn').forEach(button => {
@@ -526,5 +390,4 @@ document.addEventListener('keydown', (e) => {
 // Initialize display
 updateDisplay();
 
-console.log('Calculator with Firebase Auth initialized!');
-console.log('⚠️ Remember to replace the firebaseConfig with your own Firebase configuration.');
+console.log('Calculator page initialized!');
